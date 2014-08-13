@@ -6,6 +6,7 @@
       "node": ">= 0.8.0"
   },
   "author": "Kevin Y Chen <kyc2915@mit.edu>",
+  "main": "./lib",
   "license": "MIT",
   "repository": {
       "type": "git",
