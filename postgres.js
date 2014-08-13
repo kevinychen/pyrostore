@@ -5,16 +5,20 @@
  *   run "npm install pg"
  *
  * Postgres setup:
- *   create table planes (key text unique, value text);
+ *   create table store (key text unique, value text);
  */
 
+const DELIM = '/';
+const TABLE = 'store';
+
+var Path = require('path');
 var Client = require('pg').Client;
 
 /*
- * Postgres('table', 'postgres://kyc:mypassword@localhost:5432/pyrostore')
+ * Postgres('root', 'postgres://kyc:mypassword@localhost:5432/pyrostore')
  */
-function Postgres(table, auth) {
-    this.table = table;
+function Postgres(root, auth) {
+    this.root = root;
     this.client = new Client(auth);
     this.client.connect();
 }
@@ -38,8 +42,8 @@ Postgres.prototype.rollback = function() {
  *   -> 'root/child/'
  */
 function fixPath(path) {
-    if (path.slice(-1) !== '/') {
-        return path + '/';
+    if (path.slice(-1) !== DELIM) {
+        return path + DELIM;
     }
     return path;
 }
@@ -49,7 +53,7 @@ function fixPath(path) {
  *   -> callback(err, {grandchild: {leaf: 1, another_leaf: 2}})
  */
 Postgres.prototype.get = function(path, callback) {
-    path = fixPath(path)
+    var absPath = fixPath(Path.join(this.root, path));
 
     function addAttr(obj, attrs, value) {
         var sentinel = {obj: obj};
@@ -65,16 +69,16 @@ Postgres.prototype.get = function(path, callback) {
         return sentinel.obj;
     }
 
-    this.query("select key, value from " + this.table +
-            " where key LIKE '" + path + "%'", [], function(err, results) {
+    this.query("select key, value from " + TABLE +
+            " where key LIKE '" + absPath + "%'", [], function(err, results) {
         if (err) {
             return callback(err);
         }
         var obj = undefined;
         for (var i = 0; i < results.length; i++) {
             var result = results[i];
-            var relPath = result.key.substr(path.length);
-            var attrs = relPath.split('/').filter(function(attr) {
+            var relPath = result.key.substr(absPath.length);
+            var attrs = relPath.split(DELIM).filter(function(attr) {
                 return attr;
             });
             obj = addAttr(obj, attrs, result.value);
@@ -88,19 +92,19 @@ Postgres.prototype.get = function(path, callback) {
  * insert('root/child', {complex: 'object'}, callback)
  */
 Postgres.prototype.insert = function(path, value, callback) {
-    path = fixPath(path)
+    var absPath = fixPath(Path.join(this.root, path));
     var leaves = [];
     // TODO detect circular structures
     function traverse(relPath, obj) {
         if (typeof(obj) === 'object') {
             for (var prop in obj) {
-                traverse(relPath + prop + '/', obj[prop]);
+                traverse(relPath + prop + DELIM, obj[prop]);
             }
         } else {
             leaves.push({key: relPath, value: obj});
         }
     }
-    traverse(path, value);
+    traverse(absPath, value);
 
     var me = this;
     function begin() {
@@ -121,10 +125,10 @@ Postgres.prototype.insert = function(path, value, callback) {
                 bulkInsert();
             }
         }
-        me.query("delete from " + me.table + " where key LIKE '" +
-                path + "%'", [], complete);
-        me.query("delete from " + me.table + " where left('" +
-                path + "', char_length(key)) LIKE key", [], complete);
+        me.query("delete from " + TABLE + " where key LIKE '" +
+                absPath + "%'", [], complete);
+        me.query("delete from " + TABLE + " where left('" +
+                absPath + "', char_length(key)) LIKE key", [], complete);
     }
     function bulkInsert() {
         var counter = leaves.length;
@@ -137,8 +141,7 @@ Postgres.prototype.insert = function(path, value, callback) {
             }
         }
         for (var i = 0; i < leaves.length; i++) {
-            me.query("insert into " + me.table +
-                    " (key, value) values ($1, $2)",
+            me.query("insert into " + TABLE + " (key, value) values ($1, $2)",
                     [leaves[i].key, leaves[i].value], complete);
         }
     }
