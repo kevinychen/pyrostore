@@ -14,7 +14,7 @@ const TABLE = 'store';
 var Client = require('pg').Client;
 
 /*
- * Postgres('postgres://kyc:mypassword@localhost:5432/pyrostore')
+ * Postgres('postgres://user:mypassword@localhost:5432/pyrostore')
  */
 function Postgres(auth) {
     this.client = new Client(auth);

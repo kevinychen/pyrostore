@@ -4,7 +4,14 @@
 
 var Pyrostore = require('./pyrostore');
 
+/*
+ * path = 'root'
+ */
 var path = process.argv[2];
+
+/*
+ * auth = 'postgres://user:mypassword@localhost:5432/pyrostore'
+ */
 var auth = process.argv[3];
 
 var pyro = new Pyrostore(path);

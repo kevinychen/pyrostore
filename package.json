@@ -1,0 +1,19 @@
+{
+  "name": "pyrostore",
+  "description": "Mirror for firebase API with a custom database",
+  "version": "0.1.0",
+  "engines": {
+      "node": ">= 0.8.0"
+  },
+  "author": "Kevin Y Chen <kyc2915@mit.edu>",
+  "license": "MIT",
+  "repository": {
+      "type": "git",
+      "url": "https://github.com/kevinychen/pyrostore.git"
+  },
+  "homepage": "https://github.com/kevinychen/pyrostore",
+  "dependencies": {
+      "pg": "3.4.1"
+  }
+}
+
