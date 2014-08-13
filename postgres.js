@@ -10,15 +10,12 @@
 
 var Client = require('pg').Client;
 
-function Postgres(params) {
-    this.table = params.table || 'table';
-    this.client = new Client({
-        user: params.user || 'postgres',
-        password: params.password || '',
-        database: params.database || 'pyrostore',
-        host: params.host || 'localhost',
-        port: params.port || 5432
-    });
+/*
+ * Postgres('table', 'postgres://kyc:mypassword@localhost:5432/pyrostore')
+ */
+function Postgres(table, auth) {
+    this.table = table;
+    this.client = new Client(auth);
     this.client.connect();
 }
 
