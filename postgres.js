@@ -11,14 +11,12 @@
 const DELIM = '/';
 const TABLE = 'store';
 
-var Path = require('path');
 var Client = require('pg').Client;
 
 /*
- * Postgres('root', 'postgres://kyc:mypassword@localhost:5432/pyrostore')
+ * Postgres('postgres://kyc:mypassword@localhost:5432/pyrostore')
  */
-function Postgres(root, auth) {
-    this.root = root;
+function Postgres(auth) {
     this.client = new Client(auth);
     this.client.connect();
 }
@@ -53,7 +51,7 @@ function fixPath(path) {
  *   -> callback(err, {grandchild: {leaf: 1, another_leaf: 2}})
  */
 Postgres.prototype.get = function(path, callback) {
-    var absPath = fixPath(Path.join(this.root, path));
+    var absPath = fixPath(path);
 
     function addAttr(obj, attrs, value) {
         var sentinel = {obj: obj};
@@ -91,8 +89,8 @@ Postgres.prototype.get = function(path, callback) {
  * insert('root/child', 1, callback)
  * insert('root/child', {complex: 'object'}, callback)
  */
-Postgres.prototype.insert = function(path, value, callback) {
-    var absPath = fixPath(Path.join(this.root, path));
+Postgres.prototype.set = function(path, value, callback) {
+    var absPath = fixPath(path);
     var leaves = [];
     // TODO detect circular structures
     function traverse(relPath, obj) {

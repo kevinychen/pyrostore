@@ -5,5 +5,7 @@ var auth = process.argv[3];
 
 var pyro = new Pyrostore(path);
 pyro.auth(auth);
-pyro.doSomething();
+pyro.child('child').set({hello: 'world'}, function() {
+    pyro.once('value', console.log);
+});
 
