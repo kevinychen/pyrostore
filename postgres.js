@@ -79,7 +79,7 @@ Postgres.prototype.get = function(path, callback) {
             var attrs = relPath.split(DELIM).filter(function(attr) {
                 return attr;
             });
-            obj = addAttr(obj, attrs, result.value);
+            obj = addAttr(obj, attrs, JSON.parse(result.value));
         }
         callback(false, obj);
     });
@@ -99,7 +99,7 @@ Postgres.prototype.set = function(path, value, callback) {
                 traverse(relPath + prop + DELIM, obj[prop]);
             }
         } else {
-            leaves.push({key: relPath, value: obj});
+            leaves.push({key: relPath, value: JSON.stringify(obj)});
         }
     }
     traverse(absPath, value);
