@@ -3,6 +3,7 @@
  */
 
 var Path = require('path');
+var Snapshot = require('./snapshot').Snapshot;
 
 /*
  * Pyrostore('table')
@@ -38,7 +39,7 @@ Pyrostore.prototype.once = function(attr, callback) {
             if (err) {
                 throw 'System error: ' + err;
             }
-            callback({val: data});
+            callback(new Snapshot(data));
         });
     } else {
         throw 'Invalid attribute: ' + attr;
@@ -57,7 +58,9 @@ Pyrostore.prototype.set = function(data, callback) {
  *   -> callback(err, committed, oldData)
  */
 Pyrostore.prototype.transaction = function(editFunction, callback) {
-    this.client.transaction(this.path, editFunction, callback);
+    this.client.transaction(this.path, editFunction, function(err, committed, data) {
+        callback(err, committed, new Snapshot(data));
+    });
 }
 
 exports.Pyrostore = Pyrostore;
