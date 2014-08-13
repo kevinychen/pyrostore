@@ -32,7 +32,7 @@ Postgres.prototype.query = function(query, args, callback) {
 };
 
 Postgres.prototype.rollback = function(err, callback) {
-    this.client.query('rollback', function(majorErr) {
+    this.client.query('rollback', [], function(majorErr) {
         if (majorErr) {
             throw 'Major error: rollback failure';
         }

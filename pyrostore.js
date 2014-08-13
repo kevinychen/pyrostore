@@ -26,6 +26,7 @@ Pyrostore.prototype.auth = function(auth) {
  *   -> Pyrostore('root/child')
  */
 Pyrostore.prototype.child = function(child) {
+    child = child.toString();
     return new Pyrostore(Path.join(this.path, child), this.client);
 }
 
@@ -50,6 +51,9 @@ Pyrostore.prototype.once = function(attr, callback) {
  * set('data', callback)
  */
 Pyrostore.prototype.set = function(data, callback) {
+    if (!callback) {
+        callback = function() {};
+    }
     this.client.set(this.path, data, callback);
 }
 
@@ -59,7 +63,9 @@ Pyrostore.prototype.set = function(data, callback) {
  */
 Pyrostore.prototype.transaction = function(editFunction, callback) {
     this.client.transaction(this.path, editFunction, function(err, committed, data) {
-        callback(err, committed, new Snapshot(data));
+        if (callback) {
+            callback(err, committed, new Snapshot(data));
+        }
     });
 }
 
