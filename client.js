@@ -2,7 +2,7 @@
  * Sample usage of Pyrostore
  */
 
-var Pyrostore = require('./pyrostore').Pyrostore;
+var Pyrostore = require('./pyrostore');
 
 var path = process.argv[2];
 var auth = process.argv[3];

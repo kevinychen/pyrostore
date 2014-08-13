@@ -10,5 +10,5 @@ Snapshot.prototype.val = function() {
     return this.data;
 }
 
-exports.Snapshot = Snapshot;
+module.exports = Snapshot;
 

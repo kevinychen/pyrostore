@@ -3,7 +3,7 @@
  */
 
 var Path = require('path');
-var Snapshot = require('./snapshot').Snapshot;
+var Snapshot = require('./snapshot');
 
 /*
  * Pyrostore('table')
@@ -63,5 +63,5 @@ Pyrostore.prototype.transaction = function(editFunction, callback) {
     });
 }
 
-exports.Pyrostore = Pyrostore;
+module.exports = Pyrostore;
 
