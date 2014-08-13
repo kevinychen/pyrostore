@@ -10,5 +10,4 @@ var db = new postgres.Client({
     host: host,
     table: table
 });
-db.get('root', console.log);
-
+db.insert('/root', {child: 1, kid: {1: 'bro', 3: 'whee'}}, console.log);
