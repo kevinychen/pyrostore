@@ -31,8 +31,13 @@ Postgres.prototype.query = function(query, args, callback) {
     });
 };
 
-Postgres.prototype.rollback = function() {
-    this.client.query('rollback', function() {});
+Postgres.prototype.rollback = function(err, callback) {
+    this.client.query('rollback', function(majorErr) {
+        if (majorErr) {
+            throw 'Major error: rollback failure';
+        }
+        callback(err);
+    });
 };
 
 /*
@@ -51,9 +56,9 @@ function fixPath(path) {
  *   -> callback(err, {grandchild: {leaf: 1, another_leaf: 2}})
  */
 Postgres.prototype.get = function(path, callback) {
-    var absPath = fixPath(path);
+    path = fixPath(path);
 
-    function addAttr(obj, attrs, value) {
+    var addAttr = function(obj, attrs, value) {
         var sentinel = {obj: obj};
         var exAttrs = ['obj'].concat(attrs);
         var ptr = sentinel;
@@ -65,17 +70,17 @@ Postgres.prototype.get = function(path, callback) {
         }
         ptr[exAttrs[attrs.length]] = value;
         return sentinel.obj;
-    }
+    };
 
     this.query("select key, value from " + TABLE +
-            " where key LIKE '" + absPath + "%'", [], function(err, results) {
+            " where key LIKE '" + path + "%'", [], function(err, results) {
         if (err) {
             return callback(err);
         }
         var obj = undefined;
         for (var i = 0; i < results.length; i++) {
             var result = results[i];
-            var relPath = result.key.substr(absPath.length);
+            var relPath = result.key.substr(path.length);
             var attrs = relPath.split(DELIM).filter(function(attr) {
                 return attr;
             });
@@ -89,11 +94,11 @@ Postgres.prototype.get = function(path, callback) {
  * insert('root/child', 1, callback)
  * insert('root/child', {complex: 'object'}, callback)
  */
-Postgres.prototype.set = function(path, value, callback) {
-    var absPath = fixPath(path);
+Postgres.prototype.set = function(path, value, callback, withinTransaction) {
+    path = fixPath(path);
     var leaves = [];
     // TODO detect circular structures
-    function traverse(relPath, obj) {
+    var traverse = function(relPath, obj) {
         if (typeof(obj) === 'object') {
             for (var prop in obj) {
                 traverse(relPath + prop + DELIM, obj[prop]);
@@ -101,48 +106,78 @@ Postgres.prototype.set = function(path, value, callback) {
         } else {
             leaves.push({key: relPath, value: JSON.stringify(obj)});
         }
-    }
-    traverse(absPath, value);
+    };
+    traverse(path, value);
 
     var me = this;
-    function begin() {
+    var begin = function() {
         me.query("begin", [], function(err) {
             if (err) {
-                return me.rollback();
+                return me.rollback(err, callback);
             }
             purge();
         });
-    }
-    function purge() {
+    };
+    var purge = function() {
         var counter = 2;
-        function complete(err) {
+        var complete = function(err) {
             if (err) {
-                return me.rollback();
+                return me.rollback(err, callback);
             }
             if (--counter === 0) {
                 bulkInsert();
             }
-        }
+        };
         me.query("delete from " + TABLE + " where key LIKE '" +
-                absPath + "%'", [], complete);
+                path + "%'", [], complete);
         me.query("delete from " + TABLE + " where left('" +
-                absPath + "', char_length(key)) LIKE key", [], complete);
-    }
-    function bulkInsert() {
+                path + "', char_length(key)) LIKE key", [], complete);
+    };
+    var bulkInsert = function() {
         var counter = leaves.length;
-        function complete(err) {
+        var complete = function(err) {
             if (err) {
-                return me.rollback();
+                return me.rollback(err, callback);
             }
             if (--counter === 0) {
                 me.query('commit', [], callback);
             }
-        }
+        };
         for (var i = 0; i < leaves.length; i++) {
             me.query("insert into " + TABLE + " (key, value) values ($1, $2)",
                     [leaves[i].key, leaves[i].value], complete);
         }
+    };
+    if (withinTransaction) {
+        purge();
+    } else {
+        begin();
     }
+}
+
+/*
+ * transaction('root/child', function(data) { return f(data); }, callback)
+ *   -> callback(err, committed, oldData)
+ */
+Postgres.prototype.transaction = function(path, editFunction, callback) {
+    path = fixPath(path);
+    var me = this;
+    var begin = function() {
+        me.query("begin", [], function(err) {
+            if (err) {
+                return me.rollback(err, callback);
+            }
+            update();
+        });
+    };
+    var update = function() {
+        me.get(path, function(err, data) {
+            me.set(path, editFunction(data), function(err) {
+                // TODO figure out error message for not committed
+                callback(err, true, data);
+            }, true);
+        });
+    };
     begin();
 }
 

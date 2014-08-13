@@ -52,5 +52,13 @@ Pyrostore.prototype.set = function(data, callback) {
     this.client.set(this.path, data, callback);
 }
 
+/*
+ * transaction(function(data) { return f(data); }, callback)
+ *   -> callback(err, committed, oldData)
+ */
+Pyrostore.prototype.transaction = function(editFunction, callback) {
+    this.client.transaction(this.path, editFunction, callback);
+}
+
 exports.Pyrostore = Pyrostore;
 
