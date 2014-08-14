@@ -17,7 +17,8 @@
       "pg": "3.4.1"
   },
   "devDependencies": {
-      "nodeunit": ">= 0.6.4"
+      "nodeunit": ">= 0.6.4",
+      "cli-color": "0.3.2"
   },
   "scripts": {
       "test": "node runTests"
