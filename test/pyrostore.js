@@ -9,18 +9,21 @@ exports.testCreatePyrostore = function(test) {
     test.done();
 };
 
+exports.testUnauth = function(test) {
+    test.expect(1);
+    this.pyro = new Pyrostore('root/test');
+    this.pyro.auth(testSettings.auth);
+    this.pyro.unauth();
+    test.equals(undefined, this.pyro.client);
+    test.done();
+};
+
 exports.testMethods = {
     setUp: function(done) {
         this.pyro = new Pyrostore('root/test');
         this.pyro.auth(testSettings.auth);
         this.pyro.client.table = testSettings.table;
         done();
-    },
-    testUnauth: function(test) {
-        test.expect(1);
-        this.pyro.unauth();
-        test.equals(undefined, this.pyro.client);
-        test.done();
     },
     testChild: function(test) {
         test.expect(4);
@@ -42,7 +45,7 @@ exports.testMethods = {
         test.expect(3);
         var parentPyro = this.pyro.parent();
         test.equals('root', parentPyro.path);
-        test.equals(this.pyro.client, parentPyro.path);
+        test.equals(this.pyro.client, parentPyro.client);
         var grandparentPyro = parentPyro.parent();
         test.equals(null, grandparentPyro);
         test.done();
@@ -59,7 +62,7 @@ exports.testMethods = {
         test.done();
     },
     tearDown: function(done) {
-        this.pyro.client.end();
+        this.pyro.unauth();
         done();
     }
 };
