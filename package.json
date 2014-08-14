@@ -1,7 +1,7 @@
 {
   "name": "pyrostore",
   "description": "Mirror for firebase API with a custom database",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "engines": {
       "node": ">= 0.8.0"
   },
