@@ -1,7 +1,7 @@
 {
   "name": "pyrostore",
   "description": "Mirror for firebase API with a custom database",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "engines": {
       "node": ">= 0.8.0"
   },
@@ -15,6 +15,13 @@
   "homepage": "https://github.com/kevinychen/pyrostore",
   "dependencies": {
       "pg": "3.4.1"
+  },
+  "devDependencies": {
+      "nodeunit": ">= 0.6.4",
+      "cli-color": "0.3.2"
+  },
+  "scripts": {
+      "test": "node runTests"
   }
 }
 
