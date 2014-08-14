@@ -1,6 +1,7 @@
 var testSettings;
 var clc = require('cli-color');
 var Pyrostore = require('../lib/index');
+var pyro;
 
 try {
     testSettings = require('./settings');
@@ -12,24 +13,34 @@ try {
     process.exit();
 }
 
-exports.setUp = function(done) {
-    this.pyro = new Pyrostore('test');
-    this.pyro.auth(testSettings.auth);
-    this.pyro.client.table = testSettings.table;
-    done();
+exports.testCreatePyrostore = function(test) {
+    pyro = new Pyrostore('test');
+    test.expect(2);
+    test.equals('test', pyro.path);
+    test.equals(undefined, pyro.client);
+    test.done();
 };
+
+exports.testAuth = function(test) {
+    pyro.auth(testSettings.auth);
+    test.ok(pyro.client, 'Client not set');
+    pyro.client.table = testSettings.table;
+    test.done();
+}
 
 exports.testDatabaseConnection = function(test) {
     test.expect(2);
-    this.pyro.client.query('select 1 as number', [], function(err, rows) {
+    pyro.client.query('select 1 as number', [], function(err, rows) {
         test.equals(1, rows.length);
         test.equals(1, rows[0].number);
         test.done();
     });
 };
 
-exports.tearDown = function(done) {
-    this.pyro.client.end();
-    done();
-}
+exports.testUnauth = function(test) {
+    test.expect(1);
+    pyro.unauth();
+    test.equals(undefined, pyro.client);
+    test.done();
+};
 
