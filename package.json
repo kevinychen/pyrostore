@@ -15,6 +15,12 @@
   "homepage": "https://github.com/kevinychen/pyrostore",
   "dependencies": {
       "pg": "3.4.1"
+  },
+  "devDependencies": {
+      "nodeunit": ">= 0.6.4"
+  },
+  "scripts": {
+      "test": "node runTests"
   }
 }
 
