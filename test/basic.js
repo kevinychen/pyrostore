@@ -19,7 +19,7 @@ exports.setUp = function(done) {
     done();
 };
 
-exports.loadDB = function(test) {
+exports.testDatabaseConnection = function(test) {
     test.expect(2);
     this.pyro.client.query('select 1 as number', [], function(err, rows) {
         test.equals(1, rows.length);
